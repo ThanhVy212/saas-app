@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
 
 import {
-    Field, FieldContent,
+    Field,
     FieldError,
     FieldGroup,
     FieldLabel,
@@ -16,9 +16,8 @@ import {Button} from "@/components/ui/button";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {subjects} from "@/constants";
 import {Textarea} from "@/components/ui/textarea";
-import {cn} from "@/lib/utils";
 import {createCompanion} from "@/lib/actions/companion.actions";
-import {redirect} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   name: z.string().min(1, {message: "Companion is required."}),
@@ -42,14 +41,16 @@ const CompanionForm = () => {
         },
     })
 
+    const router = useRouter();
+
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         const companion = await createCompanion(values);
 
         if(companion) {
-            redirect(`/companions/${companion.id}`);
+            router.push(`/companions/${companion.id}`);
         }else{
             console.log( 'Failed to create companion');
-            redirect('/');
+            router.push('/');
         }
     }
 
