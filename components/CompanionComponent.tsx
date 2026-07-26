@@ -149,7 +149,7 @@ const CompanionComponent = ({companionId, subject, topic, name, userName, userIm
                     <button
                         className={
                             cn('rounded-lg py-2 cursor-pointer transition-colors w-full text-white',
-                                callStatus === CallStatus.ACTIVE ? 'bg-red-700' : 'bg-primary',
+                                callStatus === CallStatus.ACTIVE ? 'bg-red-700' : "bg-[#fe5933]",
                                 callStatus === CallStatus.CONNECTING && 'animate-pulse')
                         }
                         onClick={callStatus === CallStatus.ACTIVE ? handleDisconnect : handleCall}
