@@ -128,7 +128,14 @@ const CompanionComponent = ({companionId, subject, topic, name, userName, userIm
 
                 <div className="user-section">
                     <div className="user-avatar">
-                        <Image src={userImage} alt={userName} width={130} height={130} className="rounded-lg" />
+                        <div className="relative w-28 h-28 overflow-hidden rounded-full">
+                            <Image
+                                src={userImage}
+                                alt={userName ?? "User Avatar"}
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
                         <p className="font-bold text-2xl">
                             {userName}
                         </p>
