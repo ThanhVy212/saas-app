@@ -44,7 +44,24 @@ export const getAllCompanions = async ({limit = 10, page = 1, subject, topic} : 
 
     if(error) throw new Error(error.message || "Failed to get companions");
 
-    return companions;
+    const {userId} = await auth();
+    let bookmarkedIds: string[] = [];
+
+    if (userId) {
+        const {data: bookmarksData} = await supabase
+            .from('bookmarks')
+            .select('companion_id')
+            .eq('user_id', userId);
+        
+        if (bookmarksData) {
+            bookmarkedIds = bookmarksData.map((b) => b.companion_id);
+        }
+    }
+
+    return companions.map((companion) => ({
+        ...companion,
+        bookmarked: bookmarkedIds.includes(companion.id)
+    }));
 }
 
 export const getCompanion = async (id:string) => {
@@ -179,11 +196,11 @@ export const removeBookmark = async (companionId: string, path: string) => {
 export const getBookmarkedCompanions = async (userId: string) => {
     const supabase = createSupabaseClient();
     const {data, error} = await supabase
-        .from('bookmarked')
+        .from('bookmarks')
         .select(`companions:companion_id (*)`)
-        .eq('user_id', userId)
+        .eq('user_id', userId);
 
     if(error) throw new Error(error.message || "Failed to get bookmarkedCompanions");
 
-    return data.map(({companions}) => companions);
+    return data.map(({companions}) => companions).filter(Boolean);
 }

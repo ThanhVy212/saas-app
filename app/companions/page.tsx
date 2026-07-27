@@ -13,6 +13,12 @@ const Page = async ({searchParams} : SearchParams) => {
 
     const companions = await getAllCompanions({subject, topic});
 
+    const sortedCompanions = [...companions].sort((a, b) => {
+        if (a.bookmarked && !b.bookmarked) return -1;
+        if (!a.bookmarked && b.bookmarked) return 1;
+        return 0;
+    });
+
     return (
         <main>
             <section className="flex justify-between gap-4 max-sm:flex-col">
@@ -25,7 +31,7 @@ const Page = async ({searchParams} : SearchParams) => {
             </section>
 
             <section className="companions-grid">
-                {companions.map((companion) => (
+                {sortedCompanions.map((companion) => (
                     <CompanionCard
                         key={companion.id}
                         {...companion}
