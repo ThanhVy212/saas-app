@@ -2,6 +2,7 @@
 
 import {auth} from "@clerk/nextjs/server";
 import {createSupabaseClient} from "@/lib/supabase";
+import {revalidatePath} from "next/cache";
 
 export const createCompanion = async (formData: CreateCompanion) => {
     const {userId: author} = await auth();
@@ -140,4 +141,49 @@ export const newCompanionPermissions = async () => {
     }else{
         return true;
     }
+}
+
+export const addBookmark = async (companionId: string, path: string) => {
+    const {userId} = await auth();
+    if(!userId) return;
+    const supabase = createSupabaseClient();
+    const {data, error} = await supabase
+        .from("bookmarks")
+        .insert({
+            companion_id: companionId,
+            user_id: userId,
+        });
+
+    if(error) throw new Error(error.message || "Failed to add to bookmarks");
+
+    revalidatePath(path);
+    return data;
+}
+
+export const removeBookmark = async (companionId: string, path: string) => {
+    const {userId} = await auth();
+    if(!userId) return;
+    const supabase = createSupabaseClient();
+    const {data, error} = await supabase
+        .from('bookmarks')
+        .delete()
+        .eq("companion_id", companionId)
+        .eq("user_id", userId);
+
+    if(error) throw new Error(error.message || "Failed to remove bookmarks");
+
+    revalidatePath(path);
+    return data;
+}
+
+export const getBookmarkedCompanions = async (userId: string) => {
+    const supabase = createSupabaseClient();
+    const {data, error} = await supabase
+        .from('bookmarked')
+        .select(`companions:companion_id (*)`)
+        .eq('user_id', userId)
+
+    if(error) throw new Error(error.message || "Failed to get bookmarkedCompanions");
+
+    return data.map(({companions}) => companions);
 }
