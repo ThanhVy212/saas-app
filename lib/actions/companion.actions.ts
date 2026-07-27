@@ -23,10 +23,13 @@ export const createCompanion = async (formData: CreateCompanion) => {
 }
 
 export const getAllCompanions = async ({limit = 10, page = 1, subject, topic} : GetAllCompanions) => {
+    const {userId} = await auth();
+    if (!userId) return [];
+
     const supabase = createSupabaseClient();
 
 
-    let query = supabase.from( 'companions').select();
+    let query = supabase.from( 'companions').select().eq('author', userId);
 
     if (subject && topic) {
         query = query
@@ -44,18 +47,15 @@ export const getAllCompanions = async ({limit = 10, page = 1, subject, topic} : 
 
     if(error) throw new Error(error.message || "Failed to get companions");
 
-    const {userId} = await auth();
     let bookmarkedIds: string[] = [];
 
-    if (userId) {
-        const {data: bookmarksData} = await supabase
-            .from('bookmarks')
-            .select('companion_id')
-            .eq('user_id', userId);
-        
-        if (bookmarksData) {
-            bookmarkedIds = bookmarksData.map((b) => b.companion_id);
-        }
+    const {data: bookmarksData} = await supabase
+        .from('bookmarks')
+        .select('companion_id')
+        .eq('user_id', userId);
+    
+    if (bookmarksData) {
+        bookmarkedIds = bookmarksData.map((b) => b.companion_id);
     }
 
     return companions.map((companion) => ({
@@ -92,16 +92,20 @@ export const addToSessionHistory = async (companionId: string) => {
 }
 
 export const getRecentSessions = async (limit = 10) => {
+    const {userId} = await auth();
+    if (!userId) return [];
+
     const supabase = createSupabaseClient();
     const {data, error} = await supabase
         .from('session_history')
         .select(`companions:companion_id (*)`)
+        .eq('user_id', userId)
         .order('created_at', {ascending: false})
         .limit(limit);
 
     if(error) throw new Error(error.message || "Failed to get recent sessions");
 
-    return data.map(({companions}) => companions);
+    return data.map(({companions}) => companions).filter(Boolean);
 }
 
 export const getUserSessions = async (userId: string, limit = 10) => {
