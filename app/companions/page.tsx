@@ -11,7 +11,7 @@ const Page = async ({searchParams} : SearchParams) => {
     const subject = filters.subject ? filters.subject : '';
     const topic = filters.topic ? filters.topic : '';
 
-    const companions = await getAllCompanions({subject, topic});
+    const companions = await getAllCompanions({subject, topic, all: true});
 
     const sortedCompanions = [...companions].sort((a, b) => {
         if (a.bookmarked && !b.bookmarked) return -1;

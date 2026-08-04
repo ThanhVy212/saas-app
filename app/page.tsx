@@ -2,13 +2,35 @@ import React from 'react';
 import CompanionCard from "@/components/CompanionCard";
 import CompanionsList from "@/components/CompanionsList";
 import CTA from "@/components/CTA";
-import {recentSessions} from "@/constants";
+import DatabaseError from "@/components/DatabaseError";
 import {getAllCompanions, getRecentSessions} from "@/lib/actions/companion.actions";
 import {getSubjectColor} from "@/lib/utils";
 
+export const dynamic = 'force-dynamic';
+
 const Page = async () => {
-    const companions = await getAllCompanions({limit: 3});
-    const recentSessionsCompanions = await getRecentSessions(10);
+    let companions = [];
+    let recentSessionsCompanions = [];
+    let isDbConnected = true;
+
+    try {
+        companions = await getAllCompanions({limit: 3, all: true});
+        recentSessionsCompanions = await getRecentSessions(10);
+    } catch (error: any) {
+        if (error?.message?.includes('Dynamic server usage') || error?.digest === 'DYNAMIC_SERVER_USAGE') {
+            throw error;
+        }
+        console.error("Failed to fetch database data on homepage:", error);
+        isDbConnected = false;
+    }
+
+    if (!isDbConnected) {
+        return (
+            <main className="flex-grow flex items-center justify-center min-h-[70vh]">
+                <DatabaseError />
+            </main>
+        );
+    }
 
     return (
         <main>

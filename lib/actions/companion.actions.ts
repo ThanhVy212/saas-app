@@ -22,14 +22,18 @@ export const createCompanion = async (formData: CreateCompanion) => {
     return data[0];
 }
 
-export const getAllCompanions = async ({limit = 10, page = 1, subject, topic} : GetAllCompanions) => {
+export const getAllCompanions = async ({limit = 10, page = 1, subject, topic, all = false} : GetAllCompanions) => {
     const {userId} = await auth();
-    if (!userId) return [];
+    if (!all && !userId) return [];
 
     const supabase = createSupabaseClient();
 
 
-    let query = supabase.from( 'companions').select().eq('author', userId);
+    let query = supabase.from('companions').select();
+
+    if (!all && userId) {
+        query = query.eq('author', userId);
+    }
 
     if (subject && topic) {
         query = query
@@ -49,13 +53,15 @@ export const getAllCompanions = async ({limit = 10, page = 1, subject, topic} : 
 
     let bookmarkedIds: string[] = [];
 
-    const {data: bookmarksData} = await supabase
-        .from('bookmarks')
-        .select('companion_id')
-        .eq('user_id', userId);
-    
-    if (bookmarksData) {
-        bookmarkedIds = bookmarksData.map((b) => b.companion_id);
+    if (userId) {
+        const {data: bookmarksData} = await supabase
+            .from('bookmarks')
+            .select('companion_id')
+            .eq('user_id', userId);
+        
+        if (bookmarksData) {
+            bookmarkedIds = bookmarksData.map((b) => b.companion_id);
+        }
     }
 
     return companions.map((companion) => ({
